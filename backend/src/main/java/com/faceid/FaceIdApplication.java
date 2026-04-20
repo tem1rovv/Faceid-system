@@ -1,0 +1,14 @@
+package com.faceid;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
+
+@SpringBootApplication
+@EnableAsync
+public class FaceIdApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(FaceIdApplication.class, args);
+    }
+}
