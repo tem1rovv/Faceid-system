@@ -14,10 +14,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U faceid -d faceid"]
+      test: ["CMD-SHELL", "pg_isready -U $${SPRING_DATASOURCE_USERNAME} -d faceid"]
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - backend-db
 
   python-service:
     build:
@@ -30,13 +32,15 @@ services:
       - MODEL_NAME=buffalo_sc
       - SIMILARITY_THRESHOLD=0.4
     volumes:
-      - insightface_models:/root/.insightface
+      - insightface_models:/app/.insightface
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
       timeout: 10s
       retries: 15
       start_period: 60s
+    networks:
+      - app-net
 
   backend:
     build:
@@ -56,8 +60,10 @@ services:
         condition: service_healthy
       python-service:
         condition: service_healthy
+    networks:
+      - app-net
+      - backend-db
 
-  # ── React Frontend (Nginx) ─────────────────────────────────────────────
   frontend:
     build:
       context: ./front
@@ -67,7 +73,15 @@ services:
       - "3000:3000"
     depends_on:
       - backend
+    networks:
+      - app-net
 
 volumes:
   postgres_data:
   insightface_models:
+
+networks:
+  app-net:
+    driver: bridge
+  backend-db:
+    driver: bridge
